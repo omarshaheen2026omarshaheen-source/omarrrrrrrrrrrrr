@@ -2204,8 +2204,9 @@ const TP=(function(){
  async function loadPeople(){
   if(ok)try{
    const f=await load(),rd=async n=>(await f.fs.getDocs(f.fs.query(f.fs.collection(f.db,n),f.fs.limit(500)))).docs.map(d=>Object.assign({id:d.id},d.data()));
-   [stu,tea]=await Promise.all([rd("students").catch(()=>[]),rd("teachers").catch(()=>[])]);
-  }catch(e){}
+   let pe=null;[stu,tea]=await Promise.all([rd("students").catch(()=>[]),rd("teachers").catch(e=>{pe=e;return[]})]);window.__peopleErr=pe;
+  }catch(e){window.__peopleErr=e}
+  window.TEA=tea;try{window.dispatchEvent(new Event("people-updated"))}catch(e){}
   renderPeople();
  }
  async function loadPosts(){
@@ -2425,7 +2426,9 @@ const TP=(function(){
      await x.fs.setDoc(x.fs.doc(x.db,"teachers",mine.id),data,{merge:true});
     }
     await loadPeople();
-    ok2.textContent="تم حفظ البطاقة ✔ ستظهر الآن في صفحة المقيّمين.";
+    if(window.__peopleErr)er2.textContent="تم الحفظ، لكن تعذّرت قراءة بطاقات المعلمين: "+errText(window.__peopleErr)+" — تأكد من قواعد Firestore (السماح بالقراءة على teachers).";
+    else if(!tea.find(t=>t.id===myRecId))er2.textContent="تم الحفظ لكن البطاقة ما رجعت بالقائمة. حدّث الصفحة (Ctrl+F5).";
+    else ok2.textContent="تم حفظ البطاقة ✔ ستظهر الآن في صفحة المقيّمين.";
    }catch(e){er2.textContent=errText(e)}
    bt.disabled=false;
   };
@@ -3499,7 +3502,8 @@ html[data-site="career"] #aiBox.open{display:flex}
  const S=D.S,G=D.G,GM=D.GM,M=D.M;
  const $=id=>document.getElementById(id);
  let pane="specs",spec=null,gr=10,assOpen=false;
- function fillAss(){const G=document.getElementById("bgAssG");if(!G||typeof TC==="undefined")return;const tr=spec==="b"?"biz":"it";let l=[];try{l=(typeof tea!=="undefined"?tea:[]).filter(t=>t.track===tr||t.track==="both")}catch(e){}TC.fill(G,l,tr)}
+ function fillAss(){const G=document.getElementById("bgAssG");if(!G||typeof TC==="undefined")return;const tr=spec==="b"?"biz":"it";let l=[];try{l=(window.TEA||[]).filter(t=>t.track===tr||t.track==="both")}catch(e){}TC.fill(G,l,tr)}
+ window.addEventListener("people-updated",()=>{if(assOpen)fillAss()});
  const pr=()=>{try{return JSON.parse(localStorage.getItem("bgprog")||"{}")}catch(e){return{}}};
  const sp=o=>{try{localStorage.setItem("bgprog",JSON.stringify(o))}catch(e){}};
  const STEPS=["قراءة المطلوب (Brief)","إنجاز الواجب/النشاط","التطبيق العملي","المراجعة والتسليم"];
