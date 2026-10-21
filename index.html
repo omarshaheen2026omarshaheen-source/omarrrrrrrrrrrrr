@@ -2565,6 +2565,7 @@ const TP=(function(){
   const sel=h("select",{id:"cB"},cards.map((c,i)=>h("option",{value:String(i),text:((c.data.title?c.data.title+" ":"")+nzf(c.data.name))+(c.hid?" (محذوفة)":"")})));
   const ti=h("select",{id:"cT"},[["","بدون لقب"],["أ.","أ."],["م.","م."],["د.","د."],["الأستاذ","الأستاذ"]].map(x=>h("option",{value:x[0],text:x[1]}))),
    nm=h("input",{type:"text",id:"cN",maxlength:"60",required:""}),
+   trk=h("select",{id:"cTr"},[["it","تكنولوجيا المعلومات"],["biz","إدارة الأعمال"],["both","التخصصين"]].map(x=>h("option",{value:x[0],text:x[1]}))),
    su=h("input",{type:"text",id:"cS",maxlength:"80",placeholder:"مثلاً: قواعد البيانات"}),
    ro=h("input",{type:"text",id:"cRo",maxlength:"60",placeholder:"مقيّم ومدقق داخلي"}),
    ph=h("input",{type:"tel",id:"cP",maxlength:"16",dir:"ltr",placeholder:"07xxxxxxxx"}),
@@ -2579,7 +2580,7 @@ const TP=(function(){
   const cur=()=>cards[+sel.value];
   const paintPv=()=>{pv.textContent="";if(photo)pv.append(h("img",{src:photo,alt:""}));else pv.append(h("span",{text:"لا توجد صورة"}))};
   const load1=()=>{const c=cur();if(!c){return}const d=c.data;
-   ti.value=d.title||"";nm.value=nzf(d.name);su.value=d.subject||"";ro.value=d.role||"";ph.value=d.phone||"";bi.value=d.bio||"";photo=d.photo||"";pch=false;paintPv();
+   ti.value=d.title||"";nm.value=nzf(d.name);trk.value=d.track||d.tr||"it";su.value=d.subject||"";ro.value=d.role||"";ph.value=d.phone||"";bi.value=d.bio||"";photo=d.photo||"";pch=false;paintPv();
    dl.textContent=c.hid?"🗑️ البطاقة محذوفة":"🗑️ حذف البطاقة";dl.disabled=!!c.hid;rs.hidden=!(c.kind==="static"&&(c.ov||c.hid));
    er.textContent="";ok2.textContent=""};
   sel.onchange=load1;
@@ -2595,6 +2596,7 @@ const TP=(function(){
    h("label",{for:"cB",text:"البطاقة"}),sel,
    h("label",{for:"cT",text:"اللقب"}),ti,
    h("label",{for:"cN",text:"الاسم"}),nm,
+   h("label",{for:"cTr",text:"يدرّس في تخصص"}),trk,
    h("label",{for:"cS",text:"المادة"}),su,
    h("label",{for:"cRo",text:"الصفة (تظهر تحت الاسم)"}),ro,
    h("label",{for:"cP",text:"رقم الهاتف (يظهر زر اتصال)"}),ph,
@@ -2613,10 +2615,9 @@ const TP=(function(){
     const fields={name,title:ti.value,subject:su.value.trim(),role:ro.value.trim(),phone,bio:bi.value.trim()};
     if(pch)fields.photo=photo;
     if(c.kind==="doc"){
-     await x.fs.setDoc(x.fs.doc(x.db,"teachers",c.doc.id),Object.assign(fields,{updatedBy:user.uid,updatedAt:x.fs.serverTimestamp()}),{merge:true});
+     await x.fs.setDoc(x.fs.doc(x.db,"teachers",c.doc.id),Object.assign(fields,{track:trk.value,updatedBy:user.uid,updatedAt:x.fs.serverTimestamp()}),{merge:true});
     }else{
-     const tr=c.data.tr||c.ov&&c.ov.track||"it";
-     await x.fs.setDoc(x.fs.doc(x.db,"teachers",ovId(c)),Object.assign(fields,{base:c.base,track:c.ov&&c.ov.track||tr,hidden:false,uid:user.uid,updatedAt:x.fs.serverTimestamp()}),{merge:true});
+     await x.fs.setDoc(x.fs.doc(x.db,"teachers",ovId(c)),Object.assign(fields,{base:c.base,track:trk.value,hidden:false,uid:user.uid,updatedAt:x.fs.serverTimestamp()}),{merge:true});
     }
     ok2.textContent="تم الحفظ ✔ البطاقة تغيّرت عند الطلاب.";
     await loadPeople();
@@ -2629,7 +2630,7 @@ const TP=(function(){
    try{
     const x=await load();
     if(c.kind==="doc")await x.fs.deleteDoc(x.fs.doc(x.db,"teachers",c.doc.id));
-    else await x.fs.setDoc(x.fs.doc(x.db,"teachers",ovId(c)),{base:c.base,hidden:true,track:c.data.tr||"it",name:c.base,uid:user.uid,updatedAt:x.fs.serverTimestamp()});
+    else await x.fs.setDoc(x.fs.doc(x.db,"teachers",ovId(c)),{base:c.base,hidden:true,track:trk.value,name:c.base,uid:user.uid,updatedAt:x.fs.serverTimestamp()});
     await refresh();
    }catch(e){er.textContent=errText(e);dl.disabled=false}
   };
