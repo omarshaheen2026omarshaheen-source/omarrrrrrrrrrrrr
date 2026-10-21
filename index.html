@@ -2575,18 +2575,18 @@ const TP=(function(){
    bt=h("button",{type:"submit",class:"btn",text:"حفظ التعديل"}),
    dl=h("button",{type:"button",class:"tpdel",text:"🗑️ حذف البطاقة"}),
    rs=h("button",{type:"button",class:"btn ghost",text:"↩️ استرجاع الأصلية"});
-  let photo="";
+  let photo="",pch=false;
   const cur=()=>cards[+sel.value];
   const paintPv=()=>{pv.textContent="";if(photo)pv.append(h("img",{src:photo,alt:""}));else pv.append(h("span",{text:"لا توجد صورة"}))};
   const load1=()=>{const c=cur();if(!c){return}const d=c.data;
-   ti.value=d.title||"";nm.value=nzf(d.name);su.value=d.subject||"";ro.value=d.role||"";ph.value=d.phone||"";bi.value=d.bio||"";photo=d.photo||"";paintPv();
+   ti.value=d.title||"";nm.value=nzf(d.name);su.value=d.subject||"";ro.value=d.role||"";ph.value=d.phone||"";bi.value=d.bio||"";photo=d.photo||"";pch=false;paintPv();
    dl.textContent=c.hid?"🗑️ البطاقة محذوفة":"🗑️ حذف البطاقة";dl.disabled=!!c.hid;rs.hidden=!(c.kind==="static"&&(c.ov||c.hid));
    er.textContent="";ok2.textContent=""};
   sel.onchange=load1;
   fi.onchange=async()=>{
    er.textContent="";const f=fi.files[0];if(!f)return;
    if(!/^image\//.test(f.type)){er.textContent="اختر ملف صورة.";return}
-   try{photo=await shrinkTo(f,520,110000);paintPv()}catch(e){er.textContent=errText(e)}
+   try{photo=await shrinkTo(f,520,110000);pch=true;paintPv()}catch(e){er.textContent=errText(e)}
   };
   const refresh=async()=>{await loadPeople();paint()};
   const ovId=c=>"card_"+[...c.key].reduce((a,ch)=>((a*31+ch.charCodeAt(0))>>>0),7).toString(36);
@@ -2610,12 +2610,13 @@ const TP=(function(){
    bt.disabled=true;
    try{
     const x=await load();
-    const fields={name,title:ti.value,subject:su.value.trim(),role:ro.value.trim(),phone,bio:bi.value.trim(),photo};
+    const fields={name,title:ti.value,subject:su.value.trim(),role:ro.value.trim(),phone,bio:bi.value.trim()};
+    if(pch)fields.photo=photo;
     if(c.kind==="doc"){
      await x.fs.setDoc(x.fs.doc(x.db,"teachers",c.doc.id),Object.assign(fields,{updatedBy:user.uid,updatedAt:x.fs.serverTimestamp()}),{merge:true});
     }else{
      const tr=c.data.tr||c.ov&&c.ov.track||"it";
-     await x.fs.setDoc(x.fs.doc(x.db,"teachers",ovId(c)),Object.assign(fields,{base:c.base,track:c.ov&&c.ov.track||tr,hidden:false,uid:user.uid,updatedAt:x.fs.serverTimestamp()}));
+     await x.fs.setDoc(x.fs.doc(x.db,"teachers",ovId(c)),Object.assign(fields,{base:c.base,track:c.ov&&c.ov.track||tr,hidden:false,uid:user.uid,updatedAt:x.fs.serverTimestamp()}),{merge:true});
     }
     ok2.textContent="تم الحفظ ✔ البطاقة تغيّرت عند الطلاب.";
     await loadPeople();
