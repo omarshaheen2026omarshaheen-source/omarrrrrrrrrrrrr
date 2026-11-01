@@ -2558,7 +2558,7 @@ const TP=(function(){
    c.onclick=async()=>{
     const e2=document.documentElement.lang==="en";
     if(!confirm(e2?"Sign out of the teachers portal?":"تسجيل الخروج من بوابة المعلمين؟"))return;
-    try{const x=await load();await x.auth.signOut();user=null;staffClaims=null;try{applyMaint()}catch(_){}tpChip();if(!wrap.hidden)paint()}
+    try{const x=await load();await x.auth.signOut(x.a);user=null;staffClaims=null;try{applyMaint()}catch(_){}tpChip();if(!wrap.hidden)paint()}
     catch(e){alert(e2?"Could not sign out. Please try again.":"تعذّر تسجيل الخروج، حاول مرة أخرى.")}
    };
    tools.prepend(c);
@@ -2771,7 +2771,7 @@ const TP=(function(){
  }
  function teacherView(){
   const out=h("button",{type:"button",class:"btn ghost out",text:"خروج"});
-  out.onclick=async()=>{out.disabled=true;try{const x=await load();await x.auth.signOut();user=null;staffClaims=null;msg="";try{applyMaint()}catch(_){}try{tpChip()}catch(_){}paint()}catch(e){out.disabled=false;out.textContent="تعذّر الخروج – أعد المحاولة"}};
+  out.onclick=async()=>{out.disabled=true;try{const x=await load();await x.auth.signOut(x.a);user=null;staffClaims=null;msg="";try{applyMaint()}catch(_){}try{tpChip()}catch(_){}paint()}catch(e){out.disabled=false;out.textContent="تعذّر الخروج – أعد المحاولة"}};
   body.append(h("div",{class:"tpwho"},[h("span",{text:(isAdmin()?"مدير الموقع: ":"مسجّل: ")+(user.email||"")}),out]));
    const ad=isAdmin();
   const T=[["home","📊 لوحة التحكم"],["posts","📚 المواد"],...(ad?[["stu","👥 الطلاب"],["tea","👩‍🏫 المعلمون"]]:[]),["chat","💬 المراسلة"],...(ad?[["card","🪪 البطاقات"],["news","📰 الأخبار"],["gal","🖼️ معرض الصور"],["maint","🛠️ الصيانة"]]:[])];
